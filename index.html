@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#080b12" />
+    <title>Android Nova</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="screen auth-screen" id="authScreen">
+        <div class="brand-mark">N</div>
+        <h1>Nova AI</h1>
+        <p>Mobile web companion for chat, voice, memory, and proactive check-ins.</p>
+
+        <form class="auth-card" id="authForm">
+          <label>
+            Email
+            <input id="emailInput" type="email" autocomplete="email" placeholder="you@gmail.com" />
+          </label>
+          <label>
+            Password
+            <input id="passwordInput" type="password" autocomplete="current-password" placeholder="Only needed first time" />
+          </label>
+          <label>
+            2FA code
+            <input id="codeInput" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" />
+          </label>
+          <button type="submit">Continue</button>
+          <div class="oauth-row">
+            <button type="button" data-provider="Google">Google</button>
+            <button type="button" data-provider="Facebook">Facebook</button>
+          </div>
+          <button class="ghost" type="button" id="skipLogin">Skip login</button>
+        </form>
+      </section>
+
+      <section class="screen chat-screen hidden" id="chatScreen">
+        <header class="topbar">
+          <div>
+            <span class="eyebrow">Android Nova</span>
+            <h2>Nova AI</h2>
+          </div>
+          <button class="icon-btn" id="settingsButton" aria-label="Settings">⚙</button>
+        </header>
+
+        <section class="status-strip">
+          <div>
+            <span>Provider</span>
+            <strong id="providerLabel">Gemini</strong>
+          </div>
+          <div>
+            <span>Voice</span>
+            <strong id="voiceLabel">Ready</strong>
+          </div>
+          <div>
+            <span>Mode</span>
+            <strong id="proactiveLabel">Proactive</strong>
+          </div>
+        </section>
+
+        <section class="orb-panel">
+          <div class="orb" id="orb">
+            <div></div>
+          </div>
+          <p id="novaMood">Nova is listening for your next move.</p>
+        </section>
+
+        <section class="messages" id="messages" aria-live="polite"></section>
+
+        <form class="composer" id="chatForm">
+          <button type="button" id="micButton" aria-label="Voice input">🎙</button>
+          <input id="messageInput" autocomplete="off" placeholder="Ask Nova anything..." />
+          <button type="submit">Send</button>
+        </form>
+      </section>
+
+      <aside class="settings-sheet hidden" id="settingsSheet">
+        <div class="sheet-header">
+          <h3>Settings</h3>
+          <button class="icon-btn" id="closeSettings" aria-label="Close">×</button>
+        </div>
+        <label>
+          Provider
+          <select id="providerSelect">
+            <option value="gemini">Gemini</option>
+            <option value="ollama">Ollama</option>
+          </select>
+        </label>
+        <label>
+          Gemini API key
+          <input id="apiKeyInput" type="password" placeholder="Paste key for browser demo" />
+        </label>
+        <label>
+          Model
+          <input id="modelInput" value="gemini-2.5-flash" />
+        </label>
+        <label class="switch-row">
+          <span>Nova talks first</span>
+          <input id="proactiveToggle" type="checkbox" checked />
+        </label>
+        <label class="switch-row">
+          <span>Voice output</span>
+          <input id="voiceToggle" type="checkbox" checked />
+        </label>
+        <button id="saveSettings">Save settings</button>
+      </aside>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
