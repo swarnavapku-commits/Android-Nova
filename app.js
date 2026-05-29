@@ -128,7 +128,11 @@ async function answer(prompt) {
   orb.classList.add("speaking");
 
   if (state.provider === "gemini" && state.apiKey) {
-    await streamGemini(prompt, bubble);
+    if (location.protocol === "file:") {
+      await answerGeminiReliable(prompt, bubble);
+    } else {
+      await streamGemini(prompt, bubble);
+    }
   } else {
     await fakeLocalAnswer(prompt, bubble);
   }
@@ -137,11 +141,27 @@ async function answer(prompt) {
   novaMood.textContent = "Nova is listening for your next move.";
 }
 
+async function answerGeminiReliable(prompt, bubble) {
+  try {
+    const text = await callGeminiOnce(prompt);
+    bubble.textContent = "";
+    for (const chunk of chunkText(text, 18)) {
+      bubble.textContent += chunk;
+      messages.scrollTop = messages.scrollHeight;
+      await wait(18);
+    }
+    speak(text);
+  } catch (error) {
+    bubble.textContent = `${error.message}. Gemini full response failed. Check API key and internet.`;
+    speak(bubble.textContent);
+  }
+}
+
 async function streamGemini(prompt, bubble) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(state.model)}:streamGenerateContent?alt=sse`;
   const payload = {
     contents: [{ role: "user", parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 0.5, maxOutputTokens: 700 },
+    generationConfig: { temperature: 0.5, maxOutputTokens: 1200 },
   };
 
   let receivedText = "";
@@ -252,7 +272,7 @@ async function callGeminiOnce(prompt) {
     },
     body: JSON.stringify({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.5, maxOutputTokens: 700 },
+      generationConfig: { temperature: 0.5, maxOutputTokens: 1200 },
     }),
   });
   if (!response.ok) throw new Error(`Gemini failed: ${response.status}`);
@@ -315,6 +335,14 @@ function updateLabels() {
 
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function chunkText(text, size) {
+  const chunks = [];
+  for (let index = 0; index < text.length; index += size) {
+    chunks.push(text.slice(index, index + size));
+  }
+  return chunks;
 }
 
 boot();

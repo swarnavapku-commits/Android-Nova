@@ -1,4 +1,4 @@
-const CACHE_NAME = "android-nova-v2";
+const CACHE_NAME = "android-nova-v3";
 const ASSETS = [
   "./",
   "./index.html",
