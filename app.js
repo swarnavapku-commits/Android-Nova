@@ -141,9 +141,11 @@ async function streamGemini(prompt, bubble) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(state.model)}:streamGenerateContent?alt=sse`;
   const payload = {
     contents: [{ role: "user", parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 0.5, maxOutputTokens: 320 },
+    generationConfig: { temperature: 0.5, maxOutputTokens: 700 },
   };
 
+  let receivedText = "";
+  let spoken = "";
   try {
     const response = await fetch(url, {
       method: "POST",
@@ -158,34 +160,105 @@ async function streamGemini(prompt, bubble) {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
-    let spoken = "";
 
     while (true) {
       const { value, done } = await reader.read();
-      if (done) break;
+      if (done) {
+        buffer += decoder.decode();
+        processSseBuffer(buffer, bubble, (chunk) => {
+          receivedText += chunk;
+          spoken += chunk;
+          const sentence = takeSentence(spoken);
+          if (sentence) {
+            speak(sentence.text);
+            spoken = sentence.rest;
+          }
+        });
+        break;
+      }
       buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() || "";
-      for (const line of lines) {
-        if (!line.startsWith("data:")) continue;
-        const data = JSON.parse(line.slice(5));
+      const splitPoint = Math.max(buffer.lastIndexOf("\n\n"), buffer.lastIndexOf("\r\n\r\n"));
+      if (splitPoint >= 0) {
+        const ready = buffer.slice(0, splitPoint + 2);
+        buffer = buffer.slice(splitPoint + 2);
+        processSseBuffer(ready, bubble, (chunk) => {
+          receivedText += chunk;
+          spoken += chunk;
+          const sentence = takeSentence(spoken);
+          if (sentence) {
+            speak(sentence.text);
+            spoken = sentence.rest;
+          }
+        });
+      }
+    }
+    if (!receivedText.trim()) {
+      const fallback = await callGeminiOnce(prompt);
+      bubble.textContent = fallback;
+      receivedText = fallback;
+      speak(fallback);
+    } else if (spoken.trim()) {
+      speak(spoken.trim());
+    }
+  } catch (error) {
+    if (receivedText.trim()) {
+      const note = "\n\n[Stream ended early. Tap Send again if you need more.]";
+      bubble.textContent += note;
+      speak("Stream ended early.");
+      return;
+    }
+    try {
+      const fallback = await callGeminiOnce(prompt);
+      bubble.textContent = fallback;
+      speak(fallback);
+    } catch (fallbackError) {
+      bubble.textContent = `${fallbackError.message || error.message}. Browser API-key/CORS restrictions may apply.`;
+      speak(bubble.textContent);
+    }
+  }
+}
+
+function processSseBuffer(text, bubble, onChunk) {
+  const events = text.split(/\r?\n\r?\n/);
+  for (const event of events) {
+    const dataLines = event
+      .split(/\r?\n/)
+      .filter((line) => line.startsWith("data:"))
+      .map((line) => line.slice(5).trim())
+      .filter(Boolean);
+    for (const rawData of dataLines) {
+      if (rawData === "[DONE]") continue;
+      try {
+        const data = JSON.parse(rawData);
         const chunk = (data.candidates?.[0]?.content?.parts || []).map((part) => part.text || "").join("");
         if (!chunk) continue;
         bubble.textContent += chunk;
-        spoken += chunk;
         messages.scrollTop = messages.scrollHeight;
-        const sentence = takeSentence(spoken);
-        if (sentence) {
-          speak(sentence.text);
-          spoken = sentence.rest;
-        }
+        onChunk(chunk);
+      } catch (_error) {
+        // Keep streaming. Mobile browsers can split SSE JSON across reads.
       }
     }
-    if (spoken.trim()) speak(spoken.trim());
-  } catch (error) {
-    bubble.textContent = `${error.message}. Browser CORS/API-key restrictions may apply. Use the Python desktop app for full local control.`;
-    speak(bubble.textContent);
   }
+}
+
+async function callGeminiOnce(prompt) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(state.model)}:generateContent`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-goog-api-key": state.apiKey,
+    },
+    body: JSON.stringify({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.5, maxOutputTokens: 700 },
+    }),
+  });
+  if (!response.ok) throw new Error(`Gemini failed: ${response.status}`);
+  const data = await response.json();
+  const text = (data.candidates?.[0]?.content?.parts || []).map((part) => part.text || "").join("").trim();
+  return text || "Gemini empty response dilo.";
 }
 
 async function fakeLocalAnswer(prompt, bubble) {
@@ -208,15 +281,18 @@ function addMessage(role, text) {
 
 function speak(text) {
   if (!state.voice || !("speechSynthesis" in window)) return;
-  speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
+  const voices = speechSynthesis.getVoices();
+  const preferred = voices.find((voice) => /bn|bangla|bengali|en-IN/i.test(`${voice.lang} ${voice.name}`));
+  if (preferred) utterance.voice = preferred;
+  utterance.lang = preferred?.lang || "bn-IN";
   utterance.rate = 1.08;
   utterance.pitch = 1.02;
   speechSynthesis.speak(utterance);
 }
 
 function takeSentence(text) {
-  const match = text.match(/^(.+?[.!?।])\s+/s);
+  const match = text.match(/^(.+?[.!?\u0964])\s+/s);
   if (!match) return null;
   return { text: match[1].trim(), rest: text.slice(match[0].length) };
 }

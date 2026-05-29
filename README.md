@@ -24,3 +24,4 @@ On Android, open the same URL from your phone if your PC and phone are on the sa
 - Gemini streaming can work directly from the browser when an API key is pasted, but exposing API keys in browser apps is not safe for public release.
 - Ollama from Android needs a small backend bridge because Android browser cannot safely call your PC's local Ollama service by default.
 - The app is PWA-ready with `manifest.webmanifest` and `sw.js`.
+- Browser voice accent depends on installed Android/Chrome TTS voices. Nova tries Bengali/Bangla/en-IN first.
