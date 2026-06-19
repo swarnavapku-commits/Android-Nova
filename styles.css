@@ -103,38 +103,117 @@ h1 {
   font-size: 2.4rem;
 }
 
-.auth-screen > p {
-  color: var(--muted);
-  line-height: 1.45;
-}
-
-.auth-card {
+/* --- IRIS AI স্টাইল সাই-ফাই ৩D অর্ব ডিজাইন --- */
+.orb-panel {
   display: grid;
-  gap: 14px;
+  justify-items: center;
+  gap: 12px;
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 16px;
+  border-radius: 14px;
+  padding: 24px;
+  position: relative;
+  /* নিওন গ্লো ব্যাকগ্রাউন্ড এফেক্ট */
+  box-shadow: inset 0 0 30px rgba(0, 229, 255, 0.05), 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
-.oauth-row {
+.orb {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  place-items: center;
+  position: relative;
+  /* ৩D গ্লো এবং মাল্টি-লেয়ার গ্রেডিয়েন্ট */
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.2) 0%, transparent 50%),
+              conic-gradient(from 0deg, var(--cyan), var(--mint), #8a7cff, var(--cyan));
+  /* বাইরের দিকে নিওন ছটা (Glow Effect) */
+  box-shadow: 0 0 30px rgba(0, 229, 255, 0.3), 
+              0 0 60px rgba(124, 255, 178, 0.1),
+              inset 0 0 15px rgba(255, 255, 255, 0.2);
+  /* সাধারণ অবস্থায় হালকা পালস বা স্পিন হবে */
+  animation: irisSpin 4s linear infinite, irisPulse 2s ease-in-out infinite alternate;
 }
 
-.oauth-row button,
-.ghost,
-.icon-btn {
-  background: var(--panel-2);
-  color: var(--text);
-}
-
-.chat-screen {
+/* অর্বের ভেতরের কোর বা কেন্দ্র */
+.orb div {
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  background: #090e17; /* ভেতরের কালো কোর */
+  position: relative;
   display: grid;
-  grid-template-rows: auto auto auto 1fr auto;
-  gap: 13px;
+  place-items: center;
+  border: 2px solid rgba(0, 229, 255, 0.2);
+  box-shadow: inset 0 0 25px rgba(0, 229, 255, 0.5),
+              0 0 10px rgba(0, 0, 0, 0.8);
 }
+
+/* কোর এর ভেতরে আরেকটি ছোট সাই-ফাই ডট বা নিউক্লিয়াস (CSS Pseudo-element) */
+.orb div::after {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 15px var(--cyan), 0 0 30px var(--cyan);
+  animation: coreGlow 1s ease-in-out infinite alternate;
+}
+
+/* AI যখন কথা বলবে বা শুনবে (Active Mode) */
+.orb.speaking {
+  animation: irisSpin 1.2s linear infinite, irisActivePulse 0.4s ease-in-out infinite alternate;
+  box-shadow: 0 0 40px rgba(0, 229, 255, 0.6), 
+              0 0 80px rgba(138, 124, 255, 0.4),
+              inset 0 0 20px rgba(255, 255, 255, 0.4);
+}
+
+.orb.speaking div::after {
+  background: var(--danger);
+  box-shadow: 0 0 15px var(--danger), 0 0 30px var(--danger);
+  animation-duration: 0.2s;
+}
+
+/* --- সাই-ফাই অ্যানিমেশন কী-ফ্রেমসমূহ --- */
+@keyframes irisSpin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes irisPulse {
+  0% {
+    transform: scale(0.98);
+    filter: brightness(0.9);
+  }
+  100% {
+    transform: scale(1.03);
+    filter: brightness(1.1);
+  }
+}
+
+@keyframes irisActivePulse {
+  0% {
+    transform: scale(0.95) rotate(0deg);
+    filter: brightness(1);
+  }
+  100% {
+    transform: scale(1.12) rotate(180deg);
+    filter: brightness(1.3);
+  }
+}
+
+@keyframes coreGlow {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
 
 .topbar,
 .sheet-header {
