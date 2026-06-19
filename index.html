@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -43,7 +43,7 @@
             <span class="eyebrow">Android Nova</span>
             <h2>Nova AI</h2>
           </div>
-          <button class="icon-btn" id="settingsButton" aria-label="Settings">⚙</button>
+          <button class="icon-btn" id="settingsButton" aria-label="Settings">âš™</button>
         </header>
 
         <section class="status-strip">
@@ -67,11 +67,71 @@
           </div>
           <p id="novaMood">Nova is listening for your next move.</p>
         </section>
+        <!-- Nova Matrix QR Mobile Sync Widget -->
+        <div class="orb-panel font-mono" id="mobileSyncWidget">
+          <span class="eyebrow">NOVA MATRIX SYNC</span>
+          <h3>MOBILE LIVE CONNECT</h3>
+          <p class="text-muted" style="text-align: center; font-size: 0.8rem;">
+            Scan QR with Nova Mobile App to sync notifications, calls, and clipboard.
+          </p>
+          <div id="qrcodeContainer" class="qr-zone">
+            <div id="qrcode"></div>
+          </div>
+          <span id="syncStatus" class="blink" style="color: var(--cyan); font-size: 0.85rem; font-weight: bold;">
+            WAITING FOR MOBILE MATRIX SCAN...
+          </span>
+        </div>
+
+        <!-- Nova Visual Memory Matrix Widget -->
+        <div class="orb-panel font-mono" id="memoryGraphWidget">
+          <span class="eyebrow">NEURAL MEMORY WEB</span>
+          <h3>NOVA TIMELINE GRAPH</h3>
+          <p class="text-muted" style="text-align: center; font-size: 0.8rem;">
+            Click memory nodes to restore past sessions, linked files, or project contexts.
+          </p>
+          <div class="graph-canvas-container">
+            <div class="memory-node core-node" data-info="Nova Core Intelligence"></div>
+            <div class="memory-node node-1" data-info="Project Nova AI Source app.js"></div>
+            <div class="memory-node node-2" data-info="Today Chat UI Optimization"></div>
+            <div class="memory-node node-3" data-info="Linked File index.html"></div>
+            <svg class="graph-lines"><line x1="50%" y1="50%" x2="20%" y2="20%" /><line x1="50%" y1="50%" x2="80%" y2="20%" /><line x1="50%" y1="50%" x2="50%" y2="80%" /></svg>
+          </div>
+          <span id="graphNodeInfo" style="color: var(--cyan); font-size: 0.85rem; font-weight: bold;">
+            Click a node to explore memory link...
+          </span>
+        </div>
+
+        <!-- Nova Multi-Agent Team Control Center -->
+        <div class="orb-panel font-mono" id="agentWorkspace">
+          <span class="eyebrow">MULTI-AGENT WORKSPACE</span>
+          <h3>ACTIVE NOVA SUITE</h3>
+          <div class="agent-grid">
+            <div class="agent-card active" data-agent="coder">
+              <div class="agent-avatar">PC</div>
+              <strong>Nova Coder</strong>
+              <span>OS Shell & Scripting</span>
+            </div>
+            <div class="agent-card" data-agent="writer">
+              <div class="agent-avatar">TX</div>
+              <strong>Nova Writer</strong>
+              <span>Emails & Content</span>
+            </div>
+            <div class="agent-card" data-agent="auditor">
+              <div class="agent-avatar">SC</div>
+              <strong>Nova Auditor</strong>
+              <span>PC Security & Logs</span>
+            </div>
+          </div>
+          <p id="agentStatus" style="color: var(--mint); font-size: 0.82rem; margin-top: 5px; text-align: center;">
+            Nova Coder is currently handling system operations.
+          </p>
+        </div>
+
 
         <section class="messages" id="messages" aria-live="polite"></section>
 
         <form class="composer" id="chatForm">
-          <button type="button" id="micButton" aria-label="Voice input">🎙</button>
+          <button type="button" id="micButton" aria-label="Voice input">ðŸŽ™</button>
           <input id="messageInput" autocomplete="off" placeholder="Ask Nova anything..." />
           <button type="submit">Send</button>
         </form>
@@ -80,7 +140,7 @@
       <aside class="settings-sheet hidden" id="settingsSheet">
         <div class="sheet-header">
           <h3>Settings</h3>
-          <button class="icon-btn" id="closeSettings" aria-label="Close">×</button>
+          <button class="icon-btn" id="closeSettings" aria-label="Close">Ã—</button>
         </div>
         <label>
           Provider
@@ -105,10 +165,22 @@
           <span>Voice output</span>
           <input id="voiceToggle" type="checkbox" checked />
         </label>
+        <label>
+          Nova Persona & Mood Architecture
+          <select id="personaSelect">
+            <option value="jarvis">JARVIS (Serene & Autonomous)</option>
+            <option value="manager">Executive Manager (Sharp & Serious)</option>
+            <option value="cyber">Cyberpunk Rogue (Edgy & Informal)</option>
+            <option value="cloner">Custom Voice Clone (Beta)</option>
+          </select>
+        </label>
         <button id="saveSettings">Save settings</button>
       </aside>
     </main>
 
-    <script src="app.js?v=3"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="app.js?v=4"></script>
   </body>
 </html>
+
+

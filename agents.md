@@ -1,0 +1,1 @@
+This is a low-latency voice assistant project. All code must prioritize sub-1 second execution and parallel processing

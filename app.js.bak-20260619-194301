@@ -1,10 +1,9 @@
-﻿const state = {
+const state = {
   provider: localStorage.getItem("nova_provider") || "gemini",
   model: localStorage.getItem("nova_model") || "gemini-2.5-flash",
   apiKey: localStorage.getItem("nova_api_key") || "",
   voice: localStorage.getItem("nova_voice") !== "false",
   proactive: localStorage.getItem("nova_proactive") !== "false",
-  persona: localStorage.getItem("nova_persona") || "jarvis",
   lastTalk: Date.now(),
 };
 
@@ -24,7 +23,6 @@ const apiKeyInput = document.querySelector("#apiKeyInput");
 const modelInput = document.querySelector("#modelInput");
 const proactiveToggle = document.querySelector("#proactiveToggle");
 const voiceToggle = document.querySelector("#voiceToggle");
-const personaSelect = document.querySelector("#personaSelect");
 const saveSettings = document.querySelector("#saveSettings");
 const providerLabel = document.querySelector("#providerLabel");
 const voiceLabel = document.querySelector("#voiceLabel");
@@ -38,7 +36,6 @@ function boot() {
   modelInput.value = state.model;
   proactiveToggle.checked = state.proactive;
   voiceToggle.checked = state.voice;
-  if (personaSelect) personaSelect.value = state.persona;
   updateLabels();
 
   if (localStorage.getItem("nova_mobile_session") === "trusted") {
@@ -56,9 +53,6 @@ function openChat() {
   addMessage("nova", "Ami Nova. Android web app mode-e ready achi.");
   speak("Ami Nova. Android web app mode-e ready achi.");
   setTimeout(proactiveCheck, 2500);
-  generateSyncQR();
-  initMemoryGraph();
-  initAgentWorkspace();
 }
 
 authForm.addEventListener("submit", (event) => {
@@ -94,18 +88,14 @@ saveSettings.addEventListener("click", () => {
   state.apiKey = apiKeyInput.value.trim();
   state.proactive = proactiveToggle.checked;
   state.voice = voiceToggle.checked;
-  state.persona = personaSelect?.value || "jarvis";
   localStorage.setItem("nova_provider", state.provider);
   localStorage.setItem("nova_model", state.model);
   localStorage.setItem("nova_api_key", state.apiKey);
   localStorage.setItem("nova_proactive", String(state.proactive));
   localStorage.setItem("nova_voice", String(state.voice));
-  localStorage.setItem("nova_persona", state.persona);
   updateLabels();
   settingsSheet.classList.add("hidden");
 });
-
-let recognition;
 
 micButton.addEventListener("click", () => {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -113,60 +103,22 @@ micButton.addEventListener("click", () => {
     addMessage("nova", "Ei browser speech recognition support korche na.");
     return;
   }
-
-  if (recognition && novaMood.textContent === "Listening...") {
-    recognition.stop();
-    return;
-  }
-
-  recognition = new SpeechRecognition();
+  const recognition = new SpeechRecognition();
   recognition.lang = "en-IN";
-  recognition.continuous = true;
-  recognition.interimResults = true;
-
-  let finalTranscript = "";
-
+  recognition.interimResults = false;
   recognition.onstart = () => {
     novaMood.textContent = "Listening...";
     orb.classList.add("speaking");
-    messageInput.value = "";
   };
-
   recognition.onresult = (event) => {
-    let interimTranscript = "";
-    for (let i = event.resultIndex; i < event.results.length; ++i) {
-      if (event.results[i].isFinal) {
-        finalTranscript += event.results[i].transcript;
-      } else {
-        interimTranscript += event.results[i].transcript;
-      }
-    }
-    messageInput.value = finalTranscript + interimTranscript;
+    const text = event.results[0][0].transcript;
+    messageInput.value = text;
+    chatForm.requestSubmit();
   };
-
-  recognition.onspeechend = () => {
-    setTimeout(() => {
-      if (messageInput.value.trim() && novaMood.textContent === "Listening...") {
-        chatForm.requestSubmit();
-        recognition.stop();
-      }
-    }, 800);
-  };
-
-  recognition.onerror = (event) => {
-    console.error("Speech error:", event.error);
-    if (event.error === "no-speech") {
-      novaMood.textContent = "Kono kotha shona jaini.";
-    }
-  };
-
   recognition.onend = () => {
+    novaMood.textContent = "Nova is listening for your next move.";
     orb.classList.remove("speaking");
-    if (novaMood.textContent === "Listening...") {
-      novaMood.textContent = "Nova is listening for your next move.";
-    }
   };
-
   recognition.start();
 });
 
@@ -354,7 +306,8 @@ function speak(text) {
   const preferred = voices.find((voice) => /bn|bangla|bengali|en-IN/i.test(`${voice.lang} ${voice.name}`));
   if (preferred) utterance.voice = preferred;
   utterance.lang = preferred?.lang || "bn-IN";
-  applyPersonaSettings(utterance);
+  utterance.rate = 1.08;
+  utterance.pitch = 1.02;
   speechSynthesis.speak(utterance);
 }
 
@@ -393,96 +346,3 @@ function chunkText(text, size) {
 }
 
 boot();
-
-// --- Nova QR Generator & Sync Handler ---
-function generateSyncQR() {
-  const qrcodeContainer = document.getElementById("qrcode");
-  if (!qrcodeContainer) return;
-
-  const uniqueSessionId = "nova_sync_" + Math.random().toString(36).substring(2, 15);
-  const syncData = JSON.stringify({
-    action: "nova_mobile_connect",
-    sessionId: uniqueSessionId,
-    timestamp: Date.now()
-  });
-
-  qrcodeContainer.innerHTML = "";
-  if (window.QRCode) {
-    new QRCode(qrcodeContainer, {
-      text: syncData,
-      width: 160,
-      height: 160,
-      colorDark: "#080b12",
-      colorLight: "#ffffff",
-      correctLevel: QRCode.CorrectLevel.H
-    });
-  } else {
-    qrcodeContainer.textContent = uniqueSessionId;
-  }
-
-  listenForMobileConnection(uniqueSessionId);
-}
-
-function listenForMobileConnection(sessionId) {
-  setTimeout(() => {
-    const statusText = document.getElementById("syncStatus");
-    if (statusText) {
-      statusText.textContent = "MOBILE MATRIX SYNCED SUCCESSFULLY!";
-      statusText.style.color = "var(--mint)";
-      statusText.classList.remove("blink");
-      speak("Mobile sync complete. Nova is now connected to your device matrix.");
-    }
-  }, 4000);
-}
-
-// --- Nova Timeline Graph Click Handler ---
-function initMemoryGraph() {
-  document.querySelectorAll(".memory-node").forEach((node) => {
-    if (node.dataset.bound === "true") return;
-    node.dataset.bound = "true";
-    node.addEventListener("click", () => {
-      const infoText = document.getElementById("graphNodeInfo");
-      const nodeData = node.getAttribute("data-info");
-      if (infoText && nodeData) {
-        infoText.textContent = `Active Link: ${nodeData}`;
-        speak(`Accessing memory matrix for ${nodeData}`);
-      }
-    });
-  });
-}
-
-// --- Nova Agent Switcher Logic ---
-function initAgentWorkspace() {
-  document.querySelectorAll(".agent-card").forEach((card) => {
-    if (card.dataset.bound === "true") return;
-    card.dataset.bound = "true";
-    card.addEventListener("click", () => {
-      document.querySelectorAll(".agent-card").forEach((item) => item.classList.remove("active"));
-      card.classList.add("active");
-      const agentName = card.querySelector("strong")?.textContent || "Nova Agent";
-      const statusText = document.getElementById("agentStatus");
-      if (statusText) {
-        statusText.textContent = `${agentName} has taken control of the workspace interface.`;
-        speak(`${agentName} activated.`);
-      }
-    });
-  });
-}
-
-function applyPersonaSettings(utterance) {
-  const selectedPersona = document.getElementById("personaSelect")?.value || state.persona || "jarvis";
-  if (selectedPersona === "jarvis") {
-    utterance.rate = 0.95;
-    utterance.pitch = 0.85;
-  } else if (selectedPersona === "manager") {
-    utterance.rate = 1.15;
-    utterance.pitch = 1.0;
-  } else if (selectedPersona === "cyber") {
-    utterance.rate = 1.05;
-    utterance.pitch = 1.2;
-  } else {
-    utterance.rate = 1.08;
-    utterance.pitch = 1.02;
-  }
-}
-
